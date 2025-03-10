@@ -64,14 +64,20 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def MONGODB_URI(self) -> str:
-        uri = "%s://%s:%s@%s:%s" % (
+        uri = "%s://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority" % (
             self.MONGO_SCHEME,
             quote_plus(self.MONGODB_USER),
             quote_plus(self.MONGODB_PASSWORD),
             self.MONGODB_HOST,
             self.MONGO_PORT,
+            self.MONGODB_DATABASE_NAME,
         )
         return uri
+
+    @computed_field
+    @property
+    def all_cors_origins(self) -> list[str]:
+        return [str(origins).rstrip("/") for origins in self.BACKEND_CORS_ORIGINS]
 
     @field_validator("DEBUG")
     @classmethod

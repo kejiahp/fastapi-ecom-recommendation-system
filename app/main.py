@@ -1,13 +1,28 @@
 from fastapi import FastAPI, Request
 from fastapi import status
-
 from bson.errors import BSONError
+
 from app.core.config import settings
 from app.core.utils import Message
 from app.core.db import db
+from app.users import user_routes
+from starlette.middleware.cors import CORSMiddleware
 
 
 application: FastAPI = FastAPI()
+
+# Set all CORS enabled origins
+if settings.all_cors_origins:
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.all_cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# Include routers
+application.include_router(user_routes.router)
 
 
 @application.get(

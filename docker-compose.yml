@@ -28,6 +28,6 @@ services:
       - redis_cache:/data
 
 volumes:
-  redis_cache:
   mongodb_data:
     driver: local
+  redis_cache:

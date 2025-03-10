@@ -1,3 +1,6 @@
 fastapi[standard]
 motor[srv]
+passlib[bcrypt]
+emails
 pydantic_settings
+pyjwt
