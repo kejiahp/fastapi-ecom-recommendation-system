@@ -1,0 +1,3 @@
+fastapi[standard]
+motor[srv]
+pydantic_settings

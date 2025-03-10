@@ -1,0 +1,33 @@
+name: ecom-recommendation-backend
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb-container
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
+
+  cache:
+    image: redis:6.2-alpine
+    container_name: redis-container
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis_cache:/data
+
+volumes:
+  redis_cache:
+  mongodb_data:
+    driver: local
