@@ -12,6 +12,9 @@ db = client.get_default_database()
 class MONGO_COLLECTIONS(Enum):
     USERS = "users"
     PRODUCTS = "products"
+    CATEGORIES = "categories"
+    PRODUCT_RATINGS = "productRatings"
+    CARTS = "carts"
 
 
 def get_collection(

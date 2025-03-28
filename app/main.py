@@ -3,9 +3,11 @@ from fastapi import status
 from bson.errors import BSONError
 
 from app.core.config import settings
-from app.core.utils import Message
+from app.core.utils import Message, HTTPMessageException
 from app.core.db import db
 from app.users import user_routes
+from app.products import product_routes
+from app.cart import cart_routes
 from starlette.middleware.cors import CORSMiddleware
 
 
@@ -23,6 +25,8 @@ if settings.all_cors_origins:
 
 # Include routers
 application.include_router(user_routes.router)
+application.include_router(product_routes.router)
+application.include_router(cart_routes.router)
 
 
 @application.get(
@@ -40,8 +44,6 @@ async def base_path(request: Request):
 def invalid_objectID_exception_handler(request: Request, exc: BSONError):
     if len(exc.args) > 0 and isinstance(exc.args[0], str):
         msg = exc.args[0]
-    return Message(
-        message=msg,
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        success=False,
+    raise HTTPMessageException(
+        message=msg, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, success=False
     )

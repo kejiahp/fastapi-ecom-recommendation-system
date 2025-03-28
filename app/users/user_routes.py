@@ -29,6 +29,7 @@ from app.core.utils import (
 )
 from app.core.config import settings
 from app.core.security import get_code_hash, verify_code, create_access_token
+from app.core.deps import CurrentUserDep
 
 
 router = APIRouter(prefix="/user")
@@ -120,11 +121,11 @@ async def sign_in(signin_dto: LoginDto):
     if (verify_code(str(signin_dto.code), user["code_hash"])) == False:
         raise HTTPMessageException(
             message="Invalid authentication code",
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
     # generate authentication token, expires in 8 days
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_tkn = create_access_token(user.get("id"), expires_delta=access_token_expires)
+    access_tkn = create_access_token(user["_id"], expires_delta=access_token_expires)
     # remove sensitive user data
     public_user = UserModel(**user)
     public_user = public_user.model_dump(by_alias=True)
@@ -206,13 +207,17 @@ async def code_reset(cr_dto: CodeResetDto):
     if verify_code(str(cr_dto.old_code), user["code_hash"]) == False:
         raise HTTPMessageException(
             message="The old code and the current user's code do not match",
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
         )
 
     # hash new code
     new_code = get_code_hash(str(cr_dto.new_code))
 
-    update_opt = {"code_reset_tkn": None, "code_hash": new_code}
+    update_opt = {
+        "code_reset_tkn": None,
+        "code_hash": new_code,
+        "updated_at": datetime.now(),
+    }
 
     await user_coll.update_one({"_id": user["_id"]}, {"$set": update_opt})
 
