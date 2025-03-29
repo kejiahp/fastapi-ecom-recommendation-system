@@ -37,16 +37,14 @@ async def add_to_cart(item: CartItemModel, current_user: CurrentUserDep):
     if cart_coll is None:
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            message=collection_error_msg(
-                "update_user_cart_item", MONGO_COLLECTIONS.CARTS.name
-            ),
+            message=collection_error_msg("add_to_cart", MONGO_COLLECTIONS.CARTS.name),
         )
     products_coll = get_collection(MONGO_COLLECTIONS.PRODUCTS)
     if products_coll is None:
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message=collection_error_msg(
-                "get_user_cart", MONGO_COLLECTIONS.PRODUCTS.name
+                "add_to_cart", MONGO_COLLECTIONS.PRODUCTS.name
             ),
         )
 
@@ -77,14 +75,14 @@ async def add_to_cart(item: CartItemModel, current_user: CurrentUserDep):
     return CartModel(**cart).model_dump()
 
 
-@router.delete("/remove-from-cart/{product_id}", name="update_user_cart_item")
-async def update_user_cart_item(product_id: str, current_user: CurrentUserDep):
+@router.delete("/remove-from-cart/{product_id}", name="remove_from_cart")
+async def remove_from_cart(product_id: str, current_user: CurrentUserDep):
     cart_coll = get_collection(MONGO_COLLECTIONS.CARTS)
     if cart_coll is None:
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message=collection_error_msg(
-                "update_user_cart_item", MONGO_COLLECTIONS.CARTS.name
+                "remove_from_cart", MONGO_COLLECTIONS.CARTS.name
             ),
         )
     products_coll = get_collection(MONGO_COLLECTIONS.PRODUCTS)
@@ -92,7 +90,7 @@ async def update_user_cart_item(product_id: str, current_user: CurrentUserDep):
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message=collection_error_msg(
-                "get_user_cart", MONGO_COLLECTIONS.PRODUCTS.name
+                "remove_from_cart", MONGO_COLLECTIONS.PRODUCTS.name
             ),
         )
 
@@ -116,15 +114,13 @@ async def update_user_cart_item(product_id: str, current_user: CurrentUserDep):
     return CartModel(**cart).model_dump()
 
 
-@router.delete("/empty-cart", name="empty-cart")
+@router.delete("/empty-cart", name="empty_cart")
 async def empty_cart(current_user: CurrentUserDep):
     cart_coll = get_collection(MONGO_COLLECTIONS.CARTS)
     if cart_coll is None:
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            message=collection_error_msg(
-                "update_user_cart_item", MONGO_COLLECTIONS.CARTS.name
-            ),
+            message=collection_error_msg("empty_cart", MONGO_COLLECTIONS.CARTS.name),
         )
 
     if (cart := await cart_coll.find_one({"user_id": current_user.id})) is None:
