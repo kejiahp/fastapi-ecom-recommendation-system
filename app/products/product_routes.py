@@ -4,13 +4,16 @@ from fastapi import APIRouter, status
 
 
 from app.core.db import get_collection, MONGO_COLLECTIONS
-from app.core.utils import collection_error_msg, HTTPMessageException
+from app.core.utils import collection_error_msg, HTTPMessageException, Message
+from app.core.deps import CurrentUserDep
 from app.products.product_models import (
     ProductModel,
     CategoryListModel,
     CategoryModel,
     ProductRatingListModel,
     ProductListModel,
+    ProductRatingModel,
+    ProductRatingReviewDto,
 )
 
 router = APIRouter(prefix="/product")
@@ -39,7 +42,12 @@ async def search_product_by_name(name: str = None):
         {**model.model_dump(), "selling_price": model.selling_price}
         for model in product_list.products
     ]
-    return {"products": product_list}
+    return Message(
+        message="Product search result",
+        status_code=status.HTTP_200_OK,
+        success=True,
+        data={"products": product_list},
+    )
 
 
 @router.get("/all-categories", name="get_all_categories")
@@ -56,7 +64,12 @@ async def get_all_categories():
 
     categories = [doc async for doc in categories_coll.find({})]
 
-    return CategoryListModel(categories=categories).model_dump()
+    return Message(
+        message="All categories",
+        status_code=status.HTTP_200_OK,
+        success=True,
+        data=CategoryListModel(categories=categories).model_dump(),
+    )
 
 
 @router.get("/{product_id}", name="get_product_by_id")
@@ -115,9 +128,75 @@ async def get_product_by_id(product_id: str):
     ]
     product_ratings = ProductRatingListModel(product_ratings=product_ratings)
 
-    return {
-        **product.model_dump(),
-        "category_id": category.model_dump(),
-        "selling_price": product.selling_price,
-        **product_ratings.model_dump(),
-    }
+    return Message(
+        message="All categories",
+        status_code=status.HTTP_200_OK,
+        success=True,
+        data={
+            **product.model_dump(),
+            "category_id": category.model_dump(),
+            "selling_price": product.selling_price,
+            **product_ratings.model_dump(),
+        },
+    )
+
+
+@router.post("/add-product-rating", name="add_product_rating")
+async def add_product_rating(
+    product_rating_dto: ProductRatingReviewDto, current_user: CurrentUserDep
+):
+    products_coll = get_collection(MONGO_COLLECTIONS.PRODUCTS)
+    if products_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "add_product_rating", MONGO_COLLECTIONS.PRODUCTS.name
+            ),
+        )
+
+    product_rating_coll = get_collection(MONGO_COLLECTIONS.PRODUCT_RATINGS)
+    if product_rating_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "add_product_rating", MONGO_COLLECTIONS.PRODUCT_RATINGS.name
+            ),
+        )
+
+    if (
+        product := await products_coll.find_one(
+            {"_id": ObjectId(product_rating_dto.product_id)}
+        )
+    ) is None:
+        raise HTTPMessageException(
+            message="This product does not exist", status_code=status.HTTP_404_NOT_FOUND
+        )
+
+    if (
+        rating_exist := await product_rating_coll.find_one(
+            {"user_id": current_user.id, "product_id": product_rating_dto.product_id}
+        )
+    ) is not None:
+        raise HTTPMessageException(
+            message="This product as already been reviewed by you",
+            status_code=status.HTTP_400_BAD_REQUEST,
+        )
+
+    product_inserted = await product_rating_coll.insert_one(
+        ProductRatingModel(
+            user_id=current_user.id,
+            product_id=product_rating_dto.product_id,
+            rating=product_rating_dto.rating,
+        ).model_dump(by_alias=True, exclude=["id"])
+    )
+
+    product_rating = await product_rating_coll.find_one(
+        {"_id": product_inserted.inserted_id}
+    )
+
+    return Message(
+        message="Product as been successfully rated",
+        status_code=status.HTTP_200_OK,
+        success=True,
+        data=ProductRatingModel(**product_rating).model_dump(),
+    )

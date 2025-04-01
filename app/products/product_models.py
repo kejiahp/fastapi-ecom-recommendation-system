@@ -89,7 +89,7 @@ class ProductRatingModel(BaseModel):
     id: Union[PyObjectId, None] = Field(alias="_id", default=None)
     user_id: str
     product_id: str
-    rating: int = Field(min=0, max=5)
+    rating: int = Field(ge=1, le=5)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
 
@@ -102,3 +102,8 @@ class ProductRatingModel(BaseModel):
 
 class ProductRatingListModel(BaseModel):
     product_ratings: List[ProductRatingModel]
+
+
+class ProductRatingReviewDto(BaseModel):
+    product_id: str
+    rating: int = Field(ge=1, le=5)

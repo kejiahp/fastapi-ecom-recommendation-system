@@ -2,6 +2,13 @@ import random
 
 
 class Constants:
+    @staticmethod
+    def randN(length: int):
+        min_value = 10 ** (length - 1)
+        max_value = 10**length - 1
+        return random.randint(min_value, max_value)
+
+    @staticmethod
     def random_gender_generator() -> str:
         """Generate a random gender, only male or female"""
         return random.choice(["male", "female"])

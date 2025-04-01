@@ -15,6 +15,7 @@ class MONGO_COLLECTIONS(Enum):
     CATEGORIES = "categories"
     PRODUCT_RATINGS = "productRatings"
     CARTS = "carts"
+    ORDERS = "orders"
 
 
 def get_collection(

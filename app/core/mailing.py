@@ -75,3 +75,19 @@ def request_code_reset_token(*, token: str) -> EmailData:
         },
     )
     return EmailData(html_content=html_content, subject=subject)
+
+
+def send_order_receipt_email(
+    *, products: list[dict[str, str]], total_price: str
+) -> EmailData:
+    subject = f"✨ Order Successful ✨"
+    html_content = render_email_template(
+        template_name="review_reminder.html",
+        context={
+            "products": products,
+            "total_price": total_price,
+            "support_mail": "popoolakejiah3@gmail.com",
+            "support_mail_link": "mailto:popoolakejiah3@gmail.com",
+        },
+    )
+    return EmailData(html_content=html_content, subject=subject)

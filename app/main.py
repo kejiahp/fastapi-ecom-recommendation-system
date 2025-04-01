@@ -8,6 +8,7 @@ from app.core.db import db
 from app.users import user_routes
 from app.products import product_routes
 from app.cart import cart_routes
+from app.order import order_routes
 from starlette.middleware.cors import CORSMiddleware
 
 
@@ -27,6 +28,7 @@ if settings.all_cors_origins:
 application.include_router(user_routes.router)
 application.include_router(product_routes.router)
 application.include_router(cart_routes.router)
+application.include_router(order_routes.router)
 
 
 @application.get(
