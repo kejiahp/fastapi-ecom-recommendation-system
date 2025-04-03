@@ -200,3 +200,8 @@ async def add_product_rating(
         success=True,
         data=ProductRatingModel(**product_rating).model_dump(),
     )
+
+
+@router.get("/home-product-listing")
+async def home_product_listing():
+    pass
