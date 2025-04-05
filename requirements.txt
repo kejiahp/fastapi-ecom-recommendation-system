@@ -4,3 +4,7 @@ passlib[bcrypt]
 emails
 pydantic_settings
 pyjwt
+pandas
+scikit-learn
+numpy
+scikit-surprise 
