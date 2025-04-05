@@ -32,7 +32,7 @@ def cbf(
     similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
 
     # Convert similarity matrix to DataFrame
-    similarity_df = pd.DataFrame(similarity_matrix, index=df["id"], columns=df["id"])
+    # similarity_df = pd.DataFrame(similarity_matrix, index=df["id"], columns=df["id"])
 
     # Display similarity matrix
     # print(similarity_df)
@@ -67,13 +67,6 @@ def recommend_products(
 
     # Get recommended products
     # `.iloc` is a property in pandas used to access rows and columns in a DataFrame by integer position.
-    recommended_products = [
-        # {
-        #     "product_id": df.iloc[i[0]]["id"],
-        #     "product_name": df.iloc[i[0]]["product_name"],
-        # }
-        {**df.iloc[i[0]]}
-        for i in similarity_scores
-    ]
+    recommended_products = [{**df.iloc[i[0]]} for i in similarity_scores]
 
     return {"product_id": product_id, "recommended_products": recommended_products}

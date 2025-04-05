@@ -162,6 +162,14 @@ async def load_ratings():
         rand_user = random.choice(all_users)
         rand_rating = Constants.random_rating_generator()
 
+        # if a rating exists by the randomized user for the randomized product, skip it.
+        if (
+            rating_exist := await product_rating_coll.find_one(
+                {"user_id": rand_user["_id"], "product_id": rand_product["_id"]}
+            )
+        ) is not None:
+            continue
+
         rating_data.append(
             ProductRatingModel(
                 user_id=str(rand_user["_id"]),
@@ -178,6 +186,8 @@ async def main():
     await load_categories()
     await load_users()
     await load_products()
+    # yes, we will be executing `load_ratings()` twice ensuring there are enough ratings
+    await load_ratings()
     await load_ratings()
 
 

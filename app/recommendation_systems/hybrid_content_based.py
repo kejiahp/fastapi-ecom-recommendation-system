@@ -137,13 +137,6 @@ def recommend_products_extra(
                 **product,
                 "similarity_score": round(score, 2),
             }
-            # {
-            #     "product_id": product["id"],
-            #     "product_name": product["product_name"],
-            #     "selling_price": product["selling_price"],
-            #     "location": product["location"],
-            #     "similarity_score": round(score, 2),
-            # }
         )
 
         if len(filtered_products) >= top_n:

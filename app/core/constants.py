@@ -20,7 +20,7 @@ class Constants:
 
     @staticmethod
     def random_rating_generator() -> int:
-        """Generate a random rating number"""
+        """Generate a random rating number within the range of 0 - 5"""
         return random.randrange(0, 5)
 
     @staticmethod

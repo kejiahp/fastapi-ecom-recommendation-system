@@ -16,7 +16,7 @@ from app.products.product_models import (
     ProductRatingReviewDto,
 )
 
-from app.recommendation_systems.content_based import cbf
+from app.recommendation_systems.collaborative_filtering import cf
 from app.recommendation_systems.hybrid_content_based import hcbf
 
 router = APIRouter(prefix="/product")
@@ -148,6 +148,36 @@ async def home_product_listing():
         )
 
     pass
+
+
+@router.get("/collaborative-filtering")
+async def collaborative_filtering():
+    products_coll = get_collection(MONGO_COLLECTIONS.PRODUCTS)
+    if products_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "get_product_by_id", MONGO_COLLECTIONS.PRODUCTS.name
+            ),
+            success=False,
+        )
+
+    product_rating_coll = get_collection(MONGO_COLLECTIONS.PRODUCT_RATINGS)
+    if product_rating_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "get_product_by_id", MONGO_COLLECTIONS.PRODUCT_RATINGS.name
+            ),
+            success=False,
+        )
+
+    all_ratings = [doc async for doc in product_rating_coll.find({})]
+    all_ratings = ProductRatingListModel(product_ratings=all_ratings)
+
+    cf(all_ratings.model_dump()["product_ratings"])
+
+    return "collaborative-filtering"
 
 
 @router.get("/{product_id}", name="get_product_by_id")
