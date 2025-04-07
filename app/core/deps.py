@@ -1,7 +1,7 @@
 from bson import ObjectId
 from fastapi.responses import RedirectResponse
 from fastapi import Depends, Header, status, Request, HTTPException
-from typing import Annotated, Union
+from typing import Annotated, Union, Optional
 import jwt
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
@@ -17,24 +17,39 @@ from app.users.user_models import UserModel
 TokenFromHeaderDep = Annotated[Union[str, None], Header()]
 
 
-# def is_user_authenticated(
-#     request: Request, tk: TokenFromCookieDep = None
-# ) -> RedirectResponse | None:
-#     if tk is not None:
-#         try:
-#             payload = jwt.decode(tk, settings.SECRET_KEY, security.ALGORITHM)
-#             # validate token
-#             TokenPayload(**payload)
-#             return RedirectResponse(
-#                 status_code=status.HTTP_302_FOUND, url=request.url_for("events")
-#             )
-#         except Exception:
-#             return None
+async def is_user_authenticated(
+    authorization: TokenFromHeaderDep = None,
+) -> UserModel | None:
+    if authorization is None:
+        return None
+    try:
+        payload = jwt.decode(authorization, settings.SECRET_KEY, ALGORITHM)
+        token_data = TokenPayload(**payload)
+    except (InvalidTokenError, ValidationError):
+        return None
+
+    users_collection = get_collection(MONGO_COLLECTIONS.USERS)
+    if users_collection is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            message=collection_error_msg(
+                "get_current_user", MONGO_COLLECTIONS.USERS.name
+            ),
+            success=False,
+        )
+    if (
+        user := await users_collection.find_one({"_id": ObjectId(token_data.sub)})
+    ) is None:
+        raise HTTPMessageException(
+            message="User does not exist in the system",
+            status_code=status.HTTP_403_FORBIDDEN,
+            success=False,
+        )
+    user = UserModel(**user)
+    return user
 
 
-# IsUserAuthenticatedDeps = Annotated[
-#     Optional[RedirectResponse], Depends(is_user_authenticated)
-# ]
+IsUserAuthenticatedDeps = Annotated[Optional[UserModel], Depends(is_user_authenticated)]
 
 
 async def get_current_user(authorization: TokenFromHeaderDep = None) -> UserModel:

@@ -16,12 +16,12 @@ class Constants:
     @staticmethod
     def random_age_generator() -> int:
         """Generate a random age number within the range of 18 to 100"""
-        return random.randrange(18, 100)
+        return random.randint(18, 100)
 
     @staticmethod
     def random_rating_generator() -> int:
-        """Generate a random rating number within the range of 0 - 5"""
-        return random.randrange(0, 5)
+        """Generate a random rating number within the range of 1 - 5"""
+        return random.randint(1, 5)
 
     @staticmethod
     def random_discount_type():
