@@ -42,18 +42,22 @@ async def search_product_by_name(name: str = None):
         doc
         async for doc in products_coll.find(
             {"product_name": {"$regex": name, "$options": "i"}}
-        )
+        ).limit(10)
     ]
-    product_list = ProductListModel(products=products)
-    product_list = [
-        {**model.model_dump(), "selling_price": model.selling_price}
-        for model in product_list.products
-    ]
+
+    product_list = await format_homelisting_product(products)
+
+    # product_list = ProductListModel(products=products)
+    # product_list = [
+    #     {**model.model_dump(), "selling_price": model.selling_price}
+    #     for model in product_list.products
+    # ]
+
     return Message(
         message="Product search result",
         status_code=status.HTTP_200_OK,
         success=True,
-        data={"products": product_list},
+        data=product_list,
     )
 
 
@@ -86,9 +90,28 @@ async def get_product_by_category(category_id: str):
         raise HTTPMessageException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             message=collection_error_msg(
-                "format_homelisting_product", MONGO_COLLECTIONS.PRODUCTS.name
+                "get_product_by_category", MONGO_COLLECTIONS.PRODUCTS.name
             ),
         )
+
+    categories_coll = get_collection(MONGO_COLLECTIONS.CATEGORIES)
+    if categories_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "get_product_by_category", MONGO_COLLECTIONS.CATEGORIES.name
+            ),
+        )
+
+    if (
+        catgory := await categories_coll.find_one({"_id": ObjectId(category_id)})
+    ) is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            message="Category with this id does not exist",
+        )
+
+    category = CategoryModel(**catgory).model_dump()
 
     by_category = ProductListModel(
         products=[doc async for doc in products_coll.find({"category_id": category_id})]
@@ -99,7 +122,7 @@ async def get_product_by_category(category_id: str):
         status_code=status.HTTP_200_OK,
         success=True,
         message="All product filtered by category",
-        data=by_category,
+        data={**category, "products": by_category},
     )
 
 
@@ -222,7 +245,7 @@ async def home_product_listing(
     response_data["trending"] = trending
 
     # GET PRODUCTS TO USERS MOST RECENTLY VIEWED PRODUCTS
-    if recent_view is not None:
+    if len(recent_view) > 0 and recent_view is not None:
         content_recommended_prods = []
         for i in recent_view.split(",")[:3]:
             for j in cbf(product_id=i, top_n=5, product_data=list(all_products))[
@@ -412,6 +435,10 @@ async def get_product_by_id(product_id: str):
     product_ratings = [
         doc async for doc in product_rating_coll.find({"product_id": product_id})
     ]
+
+    avg_rating = sum(r["rating"] for r in product_ratings) / len(product_ratings)
+    avg_rating = round(avg_rating, 2)
+
     product_ratings = ProductRatingListModel(
         product_ratings=product_ratings
     ).model_dump()
@@ -432,6 +459,7 @@ async def get_product_by_id(product_id: str):
         success=True,
         data={
             **product.model_dump(),
+            "avg_rating": avg_rating,
             "category_id": category.model_dump(),
             "selling_price": product.selling_price,
             "product_ratings": product_ratings,
