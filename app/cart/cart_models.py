@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 from bson import ObjectId
 from datetime import datetime
 
@@ -8,7 +8,11 @@ from app.core.types import PyObjectId
 
 class CartItemModel(BaseModel):
     product_id: str
-    quantity: int = Field(ge=0, le=10)
+    quantity: int = Field(ge=1, le=100)
+
+
+class AddToCartDto(CartItemModel):
+    action: Literal["ADD", "REMOVE"]
 
 
 class CartModel(BaseModel):

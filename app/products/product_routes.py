@@ -260,6 +260,9 @@ async def home_product_listing(
                 if len(item_already_exists) <= 0:
                     content_recommended_prods.append(j)
 
+        # shuffle items
+        random.shuffle(content_recommended_prods)
+
         response_data["similar_to_recent_view"] = await format_homelisting_product(
             content_recommended_prods
         )
@@ -345,25 +348,25 @@ async def get_related_products(
         for prod in products.products
     ]
 
-    results_hcbf = hcbf(
+    # results_hcbf = hcbf(
+    results_hcbf = cbf(
         product_id=product_id,
         product_data=products,
         top_n=10,
-        user_location=location,
-        max_price=max_price,
-        preferred_category=category_id,
+        # user_location=location,
+        # max_price=max_price,
+        # preferred_category=category_id,
     )
 
-    related_products = [
-        {**prod.model_dump(), "selling_price": prod.selling_price}
-        for prod in ProductListModel(
-            products=[
-                product
-                for product in results_hcbf["recommended_products"]
-                if product["id"] != product_id
-            ]
-        ).products
-    ]
+    products_list = ProductListModel(
+        products=[
+            product
+            for product in results_hcbf["recommended_products"]
+            if product["id"] != product_id
+        ]
+    ).model_dump()
+
+    related_products = await format_homelisting_product(products_list["products"])
 
     return Message(
         status_code=status.HTTP_200_OK,

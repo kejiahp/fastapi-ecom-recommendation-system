@@ -148,14 +148,33 @@ async def get_all_users_orders(current_user: CurrentUserDep):
             ),
         )
 
+    product_rating_coll = get_collection(MONGO_COLLECTIONS.PRODUCT_RATINGS)
+    if product_rating_coll is None:
+        raise HTTPMessageException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=collection_error_msg(
+                "format_homelisting_product", MONGO_COLLECTIONS.PRODUCT_RATINGS.name
+            ),
+        )
+
     user_orders = [doc async for doc in order_coll.find({"user_id": current_user.id})]
+    user_orders = OrderListModel(orders=user_orders).model_dump()["orders"]
 
     for i in user_orders:
         for j in i["order_item"]:
-            product = await products_coll.find_one({"_id": ObjectId(j["product_id"])})
-            j["product_id"] = product
+            product = ProductModel(
+                **await products_coll.find_one({"_id": ObjectId(j["product_id"])})
+            )
+            rating = await product_rating_coll.find_one(
+                {"user_id": current_user.id, "product_id": product.id}
+            )
+            j["product_id"] = {
+                **product.model_dump(),
+                "selling_price": product.selling_price,
+                "is_rated": True if rating is not None else False,
+                "rating_given": rating["rating"] if rating is not None else None,
+            }
 
-    user_orders = OrderListModel(orders=user_orders).model_dump()["orders"]
     return Message(
         status_code=status.HTTP_200_OK,
         message="All user orders",

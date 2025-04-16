@@ -17,7 +17,7 @@ class OrderEnum(str, Enum):
 
 class OrderItemModel(BaseModel):
     product_id: str | ProductModel
-    quantity: int = Field(ge=1, le=10)
+    quantity: int = Field(ge=1, le=100)
 
 
 class OrderModel(BaseModel):

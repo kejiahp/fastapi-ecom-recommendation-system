@@ -4,7 +4,7 @@ from bson import ObjectId
 from app.core.deps import CurrentUserDep
 from app.core.db import get_collection, MONGO_COLLECTIONS
 from app.core.utils import collection_error_msg, HTTPMessageException, Message
-from app.cart.cart_models import CartModel, CartItemModel
+from app.cart.cart_models import CartModel, CartItemModel, AddToCartDto
 from app.products.product_models import ProductListModel
 
 router = APIRouter(prefix="/cart")
@@ -121,7 +121,7 @@ async def get_cart_total(current_user: CurrentUserDep):
 
 
 @router.patch("/add-to-cart", name="add_to_cart")
-async def add_to_cart(item: CartItemModel, current_user: CurrentUserDep):
+async def add_to_cart(item: AddToCartDto, current_user: CurrentUserDep):
     cart_coll = get_collection(MONGO_COLLECTIONS.CARTS)
     if cart_coll is None:
         raise HTTPMessageException(
@@ -146,23 +146,26 @@ async def add_to_cart(item: CartItemModel, current_user: CurrentUserDep):
 
     if (cart := await cart_coll.find_one({"user_id": current_user.id})) is None:
         cart = CartModel(
-            user_id=current_user.id, cart_items=item.model_dump()
+            user_id=current_user.id, cart_items=[item.model_dump(exclude=["action"])]
         ).model_dump(by_alias=True, exclude=["id"])
         await cart_coll.insert_one(cart)
     else:
         # Check if product exists in cart
         for cart_item in cart["cart_items"]:
             if cart_item["product_id"] == item.product_id:
-                cart_item["quantity"] += item.quantity
+                if item.action == "ADD":
+                    cart_item["quantity"] += item.quantity
+                elif item.action == "REMOVE":
+                    cart_item["quantity"] -= item.quantity
                 break
         else:
-            cart["cart_items"].append(item.model_dump())
+            cart["cart_items"].append(item.model_dump(exclude=["action"]))
 
         await cart_coll.update_one(
             {"user_id": current_user.id}, {"$set": {"cart_items": cart["cart_items"]}}
         )
     return Message(
-        message="Item successfully added to cart",
+        message="Cart successfully updated",
         status_code=status.HTTP_200_OK,
         success=True,
         data=CartModel(**cart).model_dump(),
