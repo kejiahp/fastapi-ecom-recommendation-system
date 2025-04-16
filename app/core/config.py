@@ -75,11 +75,12 @@ class Settings(BaseSettings):
                 self.MONGODB_DATABASE_NAME,
             )
         else:
-            uri = "%s://%s:%s@%s" % (
+            uri = "%s://%s:%s@%s/%s" % (
                 settings.MONGODB_SCHEME,
                 quote_plus(settings.MONGODB_USER),
                 quote_plus(settings.MONGODB_PASSWORD),
                 settings.MONGODB_HOST,
+                self.MONGODB_DATABASE_NAME,
             )
 
         return uri
