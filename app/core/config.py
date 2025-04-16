@@ -30,10 +30,10 @@ class Settings(BaseSettings):
 
     MONGODB_USER: str
     MONGODB_PASSWORD: str
-    MONGODB_HOST: str = "localhost"
-    MONGO_SCHEME: str = "mongodb"
-    MONGO_PORT: int = 27017
-    MONGODB_DATABASE_NAME: str = "ecom_recommendation_be"
+    MONGODB_HOST: str
+    MONGO_SCHEME: str
+    MONGO_PORT: int
+    MONGODB_DATABASE_NAME: str
 
     DEBUG: bool = True
     SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
@@ -64,14 +64,24 @@ class Settings(BaseSettings):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def MONGODB_URI(self) -> str:
-        uri = "%s://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority" % (
-            self.MONGO_SCHEME,
-            quote_plus(self.MONGODB_USER),
-            quote_plus(self.MONGODB_PASSWORD),
-            self.MONGODB_HOST,
-            self.MONGO_PORT,
-            self.MONGODB_DATABASE_NAME,
-        )
+        uri = ""
+        if self.DEBUG:
+            uri = "%s://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority" % (
+                self.MONGO_SCHEME,
+                quote_plus(self.MONGODB_USER),
+                quote_plus(self.MONGODB_PASSWORD),
+                self.MONGODB_HOST,
+                self.MONGO_PORT,
+                self.MONGODB_DATABASE_NAME,
+            )
+        else:
+            uri = "%s://%s:%s@%s" % (
+                settings.MONGO_SCHEME,
+                quote_plus(settings.MONGO_USER),
+                quote_plus(settings.MONGO_PASSWORD),
+                settings.MONGO_HOST,
+            )
+
         return uri
 
     @computed_field
