@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     MONGODB_USER: str
     MONGODB_PASSWORD: str
     MONGODB_HOST: str
-    MONGO_SCHEME: str
-    MONGO_PORT: int
+    MONGODB_SCHEME: str
+    MONGODB_PORT: int
     MONGODB_DATABASE_NAME: str
 
     DEBUG: bool = True
@@ -67,19 +67,19 @@ class Settings(BaseSettings):
         uri = ""
         if self.DEBUG:
             uri = "%s://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority" % (
-                self.MONGO_SCHEME,
+                self.MONGODB_SCHEME,
                 quote_plus(self.MONGODB_USER),
                 quote_plus(self.MONGODB_PASSWORD),
                 self.MONGODB_HOST,
-                self.MONGO_PORT,
+                self.MONGODB_PORT,
                 self.MONGODB_DATABASE_NAME,
             )
         else:
             uri = "%s://%s:%s@%s" % (
-                settings.MONGO_SCHEME,
-                quote_plus(settings.MONGO_USER),
-                quote_plus(settings.MONGO_PASSWORD),
-                settings.MONGO_HOST,
+                settings.MONGODB_SCHEME,
+                quote_plus(settings.MONGODB_USER),
+                quote_plus(settings.MONGODB_PASSWORD),
+                settings.MONGODB_HOST,
             )
 
         return uri
