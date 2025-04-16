@@ -15,19 +15,19 @@ services:
     volumes:
       - mongodb_data:/data/db
 
-  cache:
-    image: redis:6.2-alpine
-    container_name: redis-container
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - 6379:6379
-    command: redis-server --save 20 1 --loglevel warning
-    volumes:
-      - redis_cache:/data
+  # cache:
+  #   image: redis:6.2-alpine
+  #   container_name: redis-container
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - 6379:6379
+  #   command: redis-server --save 20 1 --loglevel warning
+  #   volumes:
+  #     - redis_cache:/data
 
 volumes:
   mongodb_data:
     driver: local
-  redis_cache:
+  # redis_cache:
