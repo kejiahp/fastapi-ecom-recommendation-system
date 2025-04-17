@@ -9,6 +9,7 @@ node_modules/
 
 deps_installation_commands.txt
 cmds_to_remember.txt
+env_source.txt
 
 .idea
 .ipynb_checkpoints

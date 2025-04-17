@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # 60 minutes * 24 hours * 60 days = 60 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 60
 
-    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
+    WORK_ENVIRONMENT: Literal["local", "staging", "production"] = "local"
 
     SMTP_USER_EMAIL: EmailStr
     SMTP_PASSWORD: str
@@ -76,10 +76,10 @@ class Settings(BaseSettings):
             )
         else:
             uri = "%s://%s:%s@%s/%s?retryWrites=true&w=majority" % (
-                settings.MONGODB_SCHEME,
-                quote_plus(settings.MONGODB_USER),
-                quote_plus(settings.MONGODB_PASSWORD),
-                settings.MONGODB_HOST,
+                self.MONGODB_SCHEME,
+                quote_plus(self.MONGODB_USER),
+                quote_plus(self.MONGODB_PASSWORD),
+                self.MONGODB_HOST,
                 self.MONGODB_DATABASE_NAME,
             )
 
