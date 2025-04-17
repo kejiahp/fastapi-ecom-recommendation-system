@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     MONGODB_PORT: int
     MONGODB_DATABASE_NAME: str
 
-    DEBUG: bool = True
+    DEBUG_MODE: bool = Field(default=False)
     SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     # 60 minutes * 24 hours * 60 days = 60 days
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 60
@@ -65,7 +65,7 @@ class Settings(BaseSettings):
     @property
     def MONGODB_URI(self) -> str:
         uri = ""
-        if self.DEBUG:
+        if self.DEBUG_MODE:
             uri = "%s://%s:%s@%s:%s/%s?authSource=admin&retryWrites=true&w=majority" % (
                 self.MONGODB_SCHEME,
                 quote_plus(self.MONGODB_USER),
@@ -75,7 +75,7 @@ class Settings(BaseSettings):
                 self.MONGODB_DATABASE_NAME,
             )
         else:
-            uri = "%s://%s:%s@%s/%s" % (
+            uri = "%s://%s:%s@%s/%s?retryWrites=true&w=majority" % (
                 settings.MONGODB_SCHEME,
                 quote_plus(settings.MONGODB_USER),
                 quote_plus(settings.MONGODB_PASSWORD),
@@ -90,13 +90,13 @@ class Settings(BaseSettings):
     def all_cors_origins(self) -> list[str]:
         return [str(origins).rstrip("/") for origins in self.BACKEND_CORS_ORIGINS]
 
-    @field_validator("DEBUG")
+    @field_validator("DEBUG_MODE", mode="before")
     @classmethod
     def debug_str_to_bool(cls, value: Any):
         if isinstance(value, str):
-            if value.lower() in {"true", "1", "yes"}:
+            if value.strip().lower() in {"true", "1", "yes"}:
                 return True
-            elif value.lower() in {"false", "0", "no"}:
+            elif value.strip().lower() in {"false", "0", "no"}:
                 return False
             else:
                 raise ValueError("Invalid `DEBUG` env")
