@@ -43,7 +43,7 @@ async def base_path(request: Request):
 
 
 @application.get("/setup-db")
-async def setup_database(request: Request):
+async def setup_database(request: Request, section: str = None):
     from app.scripts.load_data import (
         load_categories,
         load_users,
@@ -51,14 +51,22 @@ async def setup_database(request: Request):
         load_products,
     )
 
-    await load_categories()
-    await load_users()
-    await load_products()
+    if section == "category":
+        await load_categories()
+        return {"message": "category"}
+    elif section == "users":
+        await load_users()
+        return {"message": "users"}
+    elif section == "products":
+        await load_products()
+        return {"message": "products"}
     # yes, we will be executing `load_ratings()` twice ensuring there are enough ratings
-    await load_ratings()
-    await load_ratings()
-
-    return {"message": "done"}
+    elif section == "ratings":
+        await load_ratings()
+        await load_ratings()
+        return {"message": "ratings"}
+    else:
+        return {"message": "done"}
 
 
 @application.exception_handler(BSONError)
