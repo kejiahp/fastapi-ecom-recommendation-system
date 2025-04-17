@@ -42,6 +42,25 @@ async def base_path(request: Request):
     }
 
 
+@application.get("/setup-db")
+async def setup_database(request: Request):
+    from app.scripts.load_data import (
+        load_categories,
+        load_users,
+        load_ratings,
+        load_products,
+    )
+
+    await load_categories()
+    await load_users()
+    await load_products()
+    # yes, we will be executing `load_ratings()` twice ensuring there are enough ratings
+    await load_ratings()
+    await load_ratings()
+
+    return {"message": "done"}
+
+
 @application.exception_handler(BSONError)
 def invalid_objectID_exception_handler(request: Request, exc: BSONError):
     if len(exc.args) > 0 and isinstance(exc.args[0], str):
