@@ -42,7 +42,7 @@ The tokens are passed in API requests to authenticate and authorize user actions
 #### Modular Monolith Architecture
 ![system-architecture drawio](https://github.com/user-attachments/assets/f365b98f-0169-4044-9d41-50b0565a5c93)
 
-#### NoSQL Data Modul Diagram
+#### NoSQL Data Model Diagram
 ![mongodb-erd drawio](https://github.com/user-attachments/assets/1ae98615-1c04-479b-8fe3-1159795dce4c)
 
 #### Running locally (macOS)?
